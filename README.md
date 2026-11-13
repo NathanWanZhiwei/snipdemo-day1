@@ -39,4 +39,8 @@ The CLI also supports `node cli.js add <url>` and `node cli.js open <code>`. Set
 
 Commit and push changes from inside a component directory on its own branch. In the superproject, run `git submodule update --remote <path>`, stage that submodule path, and commit the pointer update. Submodule commits and pointer updates are separate changes.
 
-The bundle branch is generated from the component branches; do not edit its files by hand. CI runs the bundle generator on an hourly schedule or manual dispatch, then rebuilds and scans the image when the bundle pointer is updated. The Docker job publishes to `ghcr.io/nathanwanzhiwei/snipdemo-day1`.
+The bundle branch is generated from the component branches; do not edit its files by hand. CI runs the bundle generator on an hourly schedule or manual dispatch, then rebuilds and scans the image when the bundle pointer is updated. Both release paths run the frontend tests and a production-dependency audit before building or publishing. The Docker job scans the built image for fixable high/critical vulnerabilities before pushing to `ghcr.io/nathanwanzhiwei/snipdemo-day1`.
+
+## Generate a release bundle
+
+From `main`, run `node scripts/build-bundle.mjs` to build the Angular app and regenerate the `bundle/` submodule locally. Run it again to verify an unchanged build is a safe no-op. Add `--push` to audit production dependencies, then publish the bundle branch and its pointer update to `main` only if the audit passes. GitHub Actions runs this hourly and explicitly dispatches the Docker workflow after a successful pointer update because pushes made with `GITHUB_TOKEN` do not start other push-triggered workflows. The current Angular 19 dependency set has known high-severity advisories and is not published by these guarded release jobs until a patched compatible release is available.
